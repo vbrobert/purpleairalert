@@ -20,21 +20,54 @@ def pm25ToAQI(pm25):
     else:
         return False
 
-def avgSet(inSet):
-    total = 0
-    for item in inSet:
-        total += item
-    return total / len(inSet)
+class Station():
+    def refresh(self):
+        r = requests.get(self.url) #'https://www.purpleair.com/json?show=18189')
+        rJSON = json.loads(r.text)
+        total = 0
+        for reading in rJSON['results']:
+            total += float(reading['PM2_5Value'])
+        self.pm25 = total / len(rJSON['results'])
+        self.aqi = round(pm25ToAQI(self.pm25))
+        
+    def __init__(self, url):
+        self.url = url
+        self.refresh()
 
-r = requests.get('https://www.purpleair.com/json?show=18189')
-rJSON = json.loads(r.text)
-aqis = set()
-for reading in rJSON['results']:
-    pm25Reading = float(reading['PM2_5Value'])
-    aqi = pm25ToAQI(pm25Reading)
-    aqis.add(aqi)
+class Stations(): #Collection of station
+    def __init__(self):
+        self.stations = list()
+        
+    def update(self):
+        for station in self.stations:
+            station.refresh()
+            print(station.aqi)
 
-avgAQI = round(avgSet(aqis))
+    def avgAQI(self):
+        total = 0
+        for station in self.stations:
+            total += station.aqi
+        return station / len(self.stations)
+            
+newStation = Stations()
+newStation.stations.append(Station('https://www.purpleair.com/json?show=18189'))
+newStation.update()
 
-if avgAQI >= 250:
-    pass #Condition 1 met for alarm
+
+#def avgList(inList):
+#    total = 0
+#    for item in inList:
+#        total += item
+#    return total / len(inList)
+
+
+#aqis = list()
+#for reading in rJSON['results']:
+#    pm25Reading = float(reading['PM2_5Value'])
+#    aqi = pm25ToAQI(pm25Reading)
+#    aqis.append(aqi)
+
+#avgAQI = round(avgSet(aqis))
+
+#if avgAQI >= 250:
+#    pass #Condition 1 met for alarm
