@@ -25,7 +25,7 @@ class Station():
         r = requests.get(self.url) #'https://www.purpleair.com/json?show=18189')
         rJSON = json.loads(r.text)
         total = 0
-        for reading in rJSON['results']:
+        for reading in rJSON['results']: #Some station has more than one reading
             total += float(reading['PM2_5Value'])
         self.pm25 = total / len(rJSON['results'])
         self.aqi = round(pm25ToAQI(self.pm25))
@@ -47,27 +47,14 @@ class Stations(): #Collection of station
         total = 0
         for station in self.stations:
             total += station.aqi
-        return station / len(self.stations)
+        return total / len(self.stations)
+    #Clean Outliers
+    #Update interval
             
 newStation = Stations()
 newStation.stations.append(Station('https://www.purpleair.com/json?show=18189'))
-newStation.update()
-
-
-#def avgList(inList):
-#    total = 0
-#    for item in inList:
-#        total += item
-#    return total / len(inList)
-
-
-#aqis = list()
-#for reading in rJSON['results']:
-#    pm25Reading = float(reading['PM2_5Value'])
-#    aqi = pm25ToAQI(pm25Reading)
-#    aqis.append(aqi)
-
-#avgAQI = round(avgSet(aqis))
+newStation.stations.append(Station('https://www.purpleair.com/json?show=18985'))
+print(newStation.avgAQI())
 
 #if avgAQI >= 250:
 #    pass #Condition 1 met for alarm
