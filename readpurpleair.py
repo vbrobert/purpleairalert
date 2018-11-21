@@ -1,5 +1,7 @@
 import requests
 import json
+import argparse
+import time
 
 def pm25ToAQI(pm25):
     #AQI Formula per EPA: ((IndexHigh - IndexLow) / (concenstration high - concenstration low)) * (Concenstration - concenstration low) + index low 
@@ -30,7 +32,8 @@ class Station():
         self.pm25 = total / len(rJSON['results'])
         self.aqi = round(pm25ToAQI(self.pm25))
         
-    def __init__(self, url):
+    def __init__(self, stationID):
+        url = 'https://www.purpleair.com/json?show={}'.format(stationID)
         self.url = url
         self.refresh()
 
@@ -41,20 +44,29 @@ class Stations(): #Collection of station
     def update(self):
         for station in self.stations:
             station.refresh()
-            print(station.aqi)
 
     def avgAQI(self):
         total = 0
         for station in self.stations:
             total += station.aqi
         return total / len(self.stations)
+    def autoUpdate(self, t):
+        while True:
+            self.update()
+            time.sleep(t)
     #Clean Outliers
     #Update interval
-            
-newStation = Stations()
-newStation.stations.append(Station('https://www.purpleair.com/json?show=18189'))
-newStation.stations.append(Station('https://www.purpleair.com/json?show=18985'))
-print(newStation.avgAQI())
 
-#if avgAQI >= 250:
-#    pass #Condition 1 met for alarm
+
+parser = argparse.ArgumentParser(description="Survery's the area's AQI on a specified interval")
+parser.add_argument('-t', '--time', type=int,help='Set the number of seconds to wait before resampling stations.',default=60)
+args = parser.parse_args()
+print('Time to refresh in seconds:', args.time)
+
+
+
+
+newStation = Stations()
+newStation.stations.append(Station('18189')) #Cotati Sensor
+newStation.stations.append(Station('18985')) #Cotati Sensor
+newStation.autoUpdate(args.time)
